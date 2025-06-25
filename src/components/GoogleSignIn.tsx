@@ -80,18 +80,7 @@ export const GoogleSignIn = ({ onAuthChange }: GoogleSignInProps) => {
 
   if (isAuth) {
     return (
-      <div className="fixed top-6 right-8 z-50">
-        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold shadow border border-green-200">
-          <span className="text-green-500 text-base">✔</span>
-          Authenticated
-          <button
-            className="ml-2 px-2 py-0.5 text-xs rounded border border-green-200 bg-white hover:bg-green-100 transition"
-            onClick={handleSignOut}
-          >
-            Sign Out
-          </button>
-        </span>
-      </div>
+      <AuthenticatedLabel onSignOut={handleSignOut} />
     );
   }
 
@@ -130,3 +119,20 @@ export const GoogleSignIn = ({ onAuthChange }: GoogleSignInProps) => {
     </Card>
   );
 };
+
+export function AuthenticatedLabel({ onSignOut }: { onSignOut: () => void }) {
+  return (
+    <div className="mt-4 mb-2">
+      <span className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-green-100 text-green-700 text-base font-semibold shadow border border-green-200">
+        <span className="text-green-500 text-lg">✔</span>
+        Authenticated
+        <button
+          className="ml-2 px-3 py-1 text-sm rounded border border-green-200 bg-white hover:bg-green-100 transition font-semibold"
+          onClick={onSignOut}
+        >
+          Sign Out
+        </button>
+      </span>
+    </div>
+  );
+}

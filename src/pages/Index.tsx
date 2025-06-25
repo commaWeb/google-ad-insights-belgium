@@ -9,7 +9,7 @@ import { TopAdvertisersTable } from "@/components/TopAdvertisersTable";
 import { NewAdvertisersTable } from "@/components/NewAdvertisersTable";
 import { StatsCards } from "@/components/StatsCards";
 import { MockDataAlert } from "@/components/MockDataAlert";
-import { GoogleSignIn } from "@/components/GoogleSignIn";
+import { GoogleSignIn, AuthenticatedLabel } from "@/components/GoogleSignIn";
 import { useBelgiumAdSpendData, useBelgiumAdvertiserStats, useBelgiumNewAdvertisers } from "@/hooks/useBigQueryData";
 import { isAuthenticated } from "@/services/googleAuthService";
 import { AllAdvertisersTable } from "@/components/AllAdvertisersTable";
@@ -99,30 +99,39 @@ const Index = () => {
               </div>
               <p className="text-slate-600 text-base mt-1 text-center sm:text-right">Transparency data from Google's advertising platform</p>
             </div>
-            <div className="flex gap-2 mt-4 sm:mt-0">
-              <button
-                className={`px-4 py-2 rounded-full font-semibold border transition-colors ${selectedTool === 'dashboard' ? 'bg-blue-600 text-white border-blue-700' : 'bg-white text-blue-700 border-blue-300 hover:bg-blue-50'}`}
-                onClick={() => setSelectedTool('dashboard')}
-              >
-                Dashboard
-              </button>
-              <button
-                className={`px-4 py-2 rounded-full font-semibold border transition-colors ${selectedTool === 'scraper' ? 'bg-blue-600 text-white border-blue-700' : 'bg-white text-blue-700 border-blue-300 hover:bg-blue-50'}`}
-                onClick={() => setSelectedTool('scraper')}
-              >
-                Competitor Ad Scraper
-              </button>
-            </div>
           </div>
+          {/* Authenticated label under the header, only if authenticated */}
+          {isAuthenticatedState && (
+            <AuthenticatedLabel onSignOut={() => window.location.reload()} />
+          )}
         </div>
-        <div className="border-t border-slate-200" />
+      </div>
+
+      {/* Sub-navigation bar */}
+      <div className="border-b border-slate-200 bg-white">
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-2 py-2">
+          <a
+            href="/"
+            className="px-4 py-2 rounded-md font-medium bg-blue-600 text-white shadow"
+          >
+            Dashboard
+          </a>
+          <a
+            href="/competitor-ad-scraper"
+            className="px-4 py-2 rounded-md font-medium text-slate-700 hover:bg-slate-100"
+          >
+            Competitor Ad Scraper
+          </a>
+        </nav>
       </div>
 
       {/* Main Dashboard */}
       {selectedTool === 'dashboard' ? (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Google Sign-In */}
-          <GoogleSignIn onAuthChange={handleAuthChange} />
+          {!isAuthenticatedState && (
+            <GoogleSignIn onAuthChange={handleAuthChange} />
+          )}
 
           {/* Mock Data Alert - Always show when using mock data */}
           <MockDataAlert isUsingMockData={isUsingMockData} errorMessage={errorMessage} />

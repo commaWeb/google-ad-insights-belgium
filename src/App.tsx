@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { OAuthCallback } from "./components/OAuthCallback";
 import React, { useState } from "react";
+import CompetitorAdScraperPage from "./pages/CompetitorAdScraper";
 
 const queryClient = new QueryClient();
 
@@ -75,6 +76,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/oauth/callback" element={<OAuthCallback />} />
+            <Route path="/competitor-ad-scraper" element={<CompetitorAdScraperPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
