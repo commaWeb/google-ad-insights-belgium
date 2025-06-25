@@ -33,15 +33,39 @@ export const CompetitorAdScraper: React.FC = () => {
           throw new Error(`API error for "${keyword}": ${resp.statusText} - ${errorBody}`);
         }
         const data = await resp.json();
-        if (!data.ads || !Array.isArray(data.ads)) throw new Error(`No ads found for "${keyword}". Full response: ${JSON.stringify(data)}`);
-        const ads: SerpAd[] = data.ads.map((ad: any, i: number) => ({
-          position: ad.position || i + 1,
-          title: ad.title || '',
-          description: ad.description || '',
-          display_url: ad.displayed_url || ad.url || '',
-          advertiser: ad.advertiser || '',
-          date: new Date().toISOString().slice(0, 10),
-        }));
+        let ads: SerpAd[] = [];
+        // Check for 'ads' or 'adwords' fields
+        if (Array.isArray(data.ads)) {
+          ads = data.ads.map((ad: any, i: number) => ({
+            position: ad.position || i + 1,
+            title: ad.title || '',
+            description: ad.description || '',
+            display_url: ad.displayed_url || ad.url || '',
+            advertiser: ad.advertiser || '',
+            date: new Date().toISOString().slice(0, 10),
+          }));
+        } else if (Array.isArray(data.adwords)) {
+          ads = data.adwords.map((ad: any, i: number) => ({
+            position: ad.position || i + 1,
+            title: ad.title || '',
+            description: ad.description || '',
+            display_url: ad.displayed_url || ad.url || '',
+            advertiser: ad.advertiser || '',
+            date: new Date().toISOString().slice(0, 10),
+          }));
+        } else if (Array.isArray(data.shopping_graphs) && data.shopping_graphs.length > 0) {
+          // Flatten shopping_graphs (which is an array of arrays)
+          const shoppingAds = data.shopping_graphs.flat();
+          ads = shoppingAds.map((ad: any, i: number) => ({
+            position: ad.position || i + 1,
+            title: ad.title || ad.product_title || '',
+            description: ad.description || '',
+            display_url: ad.domain || ad.displayed_link || ad.link || '',
+            advertiser: ad.stores_that_sell || '',
+            date: new Date().toISOString().slice(0, 10),
+          }));
+        }
+        if (!ads.length) throw new Error(`No ads or shopping ads found for "${keyword}". Full response: ${JSON.stringify(data)}`);
         allAds = allAds.concat(ads);
       }
       setResults(allAds);
