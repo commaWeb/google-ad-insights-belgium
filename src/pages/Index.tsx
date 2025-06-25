@@ -81,13 +81,11 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <span className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white shadow border border-slate-200 text-4xl">
-                🇧🇪
-              </span>
-              <span className="text-3xl md:text-4xl font-extrabold text-slate-900 flex items-center gap-2">
-                <span className="text-2xl md:text-3xl">📊</span>
-                Google Ad Insights Belgium
-              </span>
+              <span className="text-3xl md:text-4xl">📊</span>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 leading-tight">Google Ad Insights</h1>
+                <div className="text-slate-500 text-lg font-medium">Belgium</div>
+              </div>
             </div>
             <div className="flex flex-col items-center sm:items-end gap-2">
               <div className="flex items-center gap-2 bg-white/80 border border-slate-200 rounded-full px-4 py-1 shadow-sm">
