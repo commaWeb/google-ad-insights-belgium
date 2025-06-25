@@ -7,6 +7,7 @@ import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { useBelgiumAdSpendData, useAdvertiserDomains } from "@/hooks/useBigQueryData";
 import { BelgiumDataBanner } from "./BelgiumDataBanner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { advertiserCategoryMap } from "@/data/advertiserCategories";
 
 interface TopAdvertisersTableProps {
   selectedPeriod: string;
@@ -103,6 +104,7 @@ export const TopAdvertisersTable = ({ selectedPeriod, selectedCategory = "all" }
         firstAdDate: item.first_ad_date || "N/A",
         lastAdDate: item.last_ad_date || "N/A",
         region: "BE",
+        category: advertiserCategoryMap[item.advertiser_id] || advertiserCategoryMap[item.advertiser_name] || "Unknown",
       }));
     }
     console.log('TopAdvertisersTable: Using mock data');
@@ -117,9 +119,15 @@ export const TopAdvertisersTable = ({ selectedPeriod, selectedCategory = "all" }
     }, {})
   });
 
+  // Filter by category if not 'all'
+  const filteredAdvertisers = useMemo(() => {
+    if (selectedCategory === "all") return allAdvertisers;
+    return allAdvertisers.filter(a => a.category === selectedCategory);
+  }, [allAdvertisers, selectedCategory]);
+
   // Sorting logic
   const sortedAdvertisers = useMemo(() => {
-    return [...allAdvertisers].sort((a, b) => {
+    return [...filteredAdvertisers].sort((a, b) => {
       let aValue: any = a[sortField];
       let bValue: any = b[sortField];
 
@@ -139,7 +147,7 @@ export const TopAdvertisersTable = ({ selectedPeriod, selectedCategory = "all" }
         return aValue < bValue ? 1 : -1;
       }
     });
-  }, [allAdvertisers, sortField, sortDirection]);
+  }, [filteredAdvertisers, sortField, sortDirection]);
 
   // Pagination logic
   const totalPages = Math.ceil(sortedAdvertisers.length / itemsPerPage);
@@ -228,6 +236,11 @@ export const TopAdvertisersTable = ({ selectedPeriod, selectedCategory = "all" }
                   <TableHead className="font-semibold">First Ad Date</TableHead>
                   <TableHead className="font-semibold">Last Ad Date</TableHead>
                   <TableHead className="font-semibold">Region</TableHead>
+                  <TableHead className="font-semibold">
+                    <Button variant="ghost" onClick={() => handleSort('category')} className="h-auto p-0 font-semibold">
+                      Category {getSortIcon('category')}
+                    </Button>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -242,6 +255,11 @@ export const TopAdvertisersTable = ({ selectedPeriod, selectedCategory = "all" }
                     <TableCell className="text-sm text-slate-600">{advertiser.firstAdDate}</TableCell>
                     <TableCell className="text-sm text-slate-600">{advertiser.lastAdDate}</TableCell>
                     <TableCell className="text-sm text-slate-600">{advertiser.region}</TableCell>
+                    <TableCell className="text-sm text-slate-600">
+                      <Badge variant="secondary" className={getCategoryColor(advertiser.category)}>
+                        {advertiser.category}
+                      </Badge>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
