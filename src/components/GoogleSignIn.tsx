@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -81,32 +80,20 @@ export const GoogleSignIn = ({ onAuthChange }: GoogleSignInProps) => {
 
   if (isAuth) {
     return (
-      <Card className="mb-6 border-green-200 bg-green-50">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-green-800 flex items-center gap-2">
-            <LogIn className="w-5 h-5" />
-            Authenticated with Google
-          </CardTitle>
-          <CardDescription className="text-green-700">
-            You're now connected to Google BigQuery. Real data will be displayed.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {successMessage && (
-            <Alert className="mb-4 border-green-300 bg-green-50">
-              <AlertDescription className="text-green-800">{successMessage}</AlertDescription>
-            </Alert>
-          )}
-          <Button 
-            variant="outline" 
+      <div className="max-w-2xl mx-auto mt-4 mb-2">
+        <div className="flex items-center gap-2 bg-green-50 border border-green-100 rounded px-3 py-2 text-green-700 text-sm shadow-none">
+          <span className="text-green-500 text-base">✔️</span>
+          <span>
+            Authenticated with Google. <span className="text-green-600 font-medium">Real data</span> will be displayed.
+          </span>
+          <button
+            className="ml-auto px-2 py-1 text-xs rounded border border-green-200 bg-white hover:bg-green-100 transition"
             onClick={handleSignOut}
-            className="border-green-300 text-green-800 hover:bg-green-100"
           >
-            <LogOut className="w-4 h-4 mr-2" />
             Sign Out
-          </Button>
-        </CardContent>
-      </Card>
+          </button>
+        </div>
+      </div>
     );
   }
 
