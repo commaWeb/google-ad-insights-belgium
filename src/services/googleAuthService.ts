@@ -11,6 +11,20 @@ const REDIRECT_URI = typeof window !== 'undefined' && window.location.origin
   ? `${window.location.origin}/oauth/callback`
   : 'http://localhost:8080/oauth/callback';
 
+const SCOPES = 'https://www.googleapis.com/auth/bigquery.readonly https://www.googleapis.com/auth/cloud-platform.read-only';
+
+export function getAuthUrl() {
+  const params = new URLSearchParams({
+    client_id: CLIENT_ID,
+    redirect_uri: REDIRECT_URI,
+    response_type: 'code',
+    scope: SCOPES,
+    access_type: 'offline',
+    prompt: 'consent',
+  });
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+}
+
 export function isAuthenticated() {
   const storedToken = localStorage.getItem('google_access_token');
   const storedExpiry = localStorage.getItem('google_token_expiry');
