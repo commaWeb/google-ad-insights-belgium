@@ -75,28 +75,33 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
-                🇧🇪 Google Ad Insights Belgium
-              </h1>
-              <p className="text-slate-600 mt-1">
-                Transparency data from Google's advertising platform
-              </p>
-            </div>
+      <div className="bg-gradient-to-r from-blue-50 via-white to-yellow-50 border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <Badge variant="secondary" className={isAuthenticatedState && !isUsingMockData ? "bg-green-100 text-green-800 border-green-300" : "bg-yellow-100 text-yellow-800 border-yellow-300"}>
-                {isAuthenticatedState && !isUsingMockData ? "Live Data" : "Mock Data"}
-              </Badge>
-              <div className="flex items-center text-sm text-slate-500">
-                <CalendarDays className="w-4 h-4 mr-1" />
-                Last updated: Today
+              <span className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white shadow border border-slate-200 text-4xl">
+                🇧🇪
+              </span>
+              <span className="text-3xl md:text-4xl font-extrabold text-slate-900 flex items-center gap-2">
+                <span className="text-2xl md:text-3xl">📊</span>
+                Google Ad Insights Belgium
+              </span>
+            </div>
+            <div className="flex flex-col items-center sm:items-end gap-2">
+              <div className="flex items-center gap-2 bg-white/80 border border-slate-200 rounded-full px-4 py-1 shadow-sm">
+                <Badge variant="secondary" className={isAuthenticatedState && !isUsingMockData ? "bg-green-100 text-green-800 border-green-300" : "bg-yellow-100 text-yellow-800 border-yellow-300"}>
+                  {isAuthenticatedState && !isUsingMockData ? "Live Data" : "Mock Data"}
+                </Badge>
+                <div className="flex items-center text-sm text-slate-500">
+                  <CalendarDays className="w-4 h-4 mr-1" />
+                  Last updated: Today
+                </div>
               </div>
+              <p className="text-slate-600 text-base mt-1 text-center sm:text-right">Transparency data from Google's advertising platform</p>
             </div>
           </div>
         </div>
+        <div className="border-t border-slate-200" />
       </div>
 
       {/* Main Dashboard */}
