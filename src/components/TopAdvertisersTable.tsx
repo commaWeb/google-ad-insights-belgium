@@ -10,12 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 
 interface TopAdvertisersTableProps {
   selectedPeriod: string;
+  selectedCategory: string;
 }
 
 type SortField = 'name' | 'category' | 'spend' | 'domain';
 type SortDirection = 'asc' | 'desc';
 
-export const TopAdvertisersTable = ({ selectedPeriod }: TopAdvertisersTableProps) => {
+export const TopAdvertisersTable = ({ selectedPeriod, selectedCategory }: TopAdvertisersTableProps) => {
   console.log('TopAdvertisersTable: Rendering with period:', selectedPeriod);
   
   const { data: adSpendData, isLoading, error } = useBelgiumAdSpendData(selectedPeriod);
@@ -49,6 +50,7 @@ export const TopAdvertisersTable = ({ selectedPeriod }: TopAdvertisersTableProps
       firstAdDate: "2025-05-01",
       lastAdDate: "2025-06-01",
       region: "BE",
+      category: "commercial"
     },
     {
       name: "Delhaize",
@@ -58,6 +60,7 @@ export const TopAdvertisersTable = ({ selectedPeriod }: TopAdvertisersTableProps
       firstAdDate: "2025-05-03",
       lastAdDate: "2025-06-02",
       region: "BE",
+      category: "commercial"
     },
     {
       name: "Liberal Party Belgium",
@@ -67,6 +70,7 @@ export const TopAdvertisersTable = ({ selectedPeriod }: TopAdvertisersTableProps
       firstAdDate: "2025-05-05",
       lastAdDate: "2025-06-03",
       region: "BE",
+      category: "political"
     },
     {
       name: "Red Cross Belgium",
@@ -76,6 +80,7 @@ export const TopAdvertisersTable = ({ selectedPeriod }: TopAdvertisersTableProps
       firstAdDate: "2025-05-07",
       lastAdDate: "2025-06-04",
       region: "BE",
+      category: "nonprofit"
     },
   ];
 
@@ -101,6 +106,7 @@ export const TopAdvertisersTable = ({ selectedPeriod }: TopAdvertisersTableProps
         firstAdDate: item.first_ad_date || "N/A",
         lastAdDate: item.last_ad_date || "N/A",
         region: "BE",
+        category: item.category || item.topic || "unknown"
       }));
     }
     return mockAdvertisers;
@@ -115,7 +121,9 @@ export const TopAdvertisersTable = ({ selectedPeriod }: TopAdvertisersTableProps
   });
 
   // Filter by category if not 'all'
-  const filteredAdvertisers = allAdvertisers;
+  const filteredAdvertisers = selectedCategory === 'all'
+    ? allAdvertisers // include all, even if category is missing
+    : allAdvertisers.filter(item => (item.category || 'unknown').toLowerCase() === selectedCategory);
 
   // Sorting logic
   const sortedAdvertisers = useMemo(() => {

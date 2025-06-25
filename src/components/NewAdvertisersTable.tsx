@@ -10,12 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 
 interface NewAdvertisersTableProps {
   selectedPeriod: string;
+  selectedCategory: string;
 }
 
 type SortField = 'name' | 'advertiserId' | 'spend' | 'ads' | 'firstAdDate' | 'lastAdDate' | 'region';
 type SortDirection = 'asc' | 'desc';
 
-export const NewAdvertisersTable = ({ selectedPeriod }: NewAdvertisersTableProps) => {
+export const NewAdvertisersTable = ({ selectedPeriod, selectedCategory }: NewAdvertisersTableProps) => {
   const { data: newAdvertisersData, isLoading, error } = useBelgiumNewAdvertisers(selectedPeriod, undefined, 50);
   const { data: domainsData } = useAdvertiserDomains();
   
@@ -114,6 +115,7 @@ export const NewAdvertisersTable = ({ selectedPeriod }: NewAdvertisersTableProps
         firstAdDate: item.first_ad_date || "N/A",
         lastAdDate: item.last_ad_date || "N/A",
         region: "BE",
+        category: item.category || item.topic || "unknown"
       }));
     }
     // fallback to mock data in the same structure
@@ -125,6 +127,7 @@ export const NewAdvertisersTable = ({ selectedPeriod }: NewAdvertisersTableProps
       firstAdDate: item.firstAdDate,
       lastAdDate: item.firstAdDate,
       region: "BE",
+      category: item.category || "unknown"
     }));
   }, [newAdvertisersData]);
 
@@ -135,9 +138,14 @@ export const NewAdvertisersTable = ({ selectedPeriod }: NewAdvertisersTableProps
     return <BelgiumDataBanner />;
   }
 
+  // Filter by category if not 'all'
+  const filteredNewAdvertisers = selectedCategory === 'all'
+    ? allNewAdvertisers
+    : allNewAdvertisers.filter(item => (item.category || '').toLowerCase() === selectedCategory);
+
   // Sorting logic
   const sortedNewAdvertisers = useMemo(() => {
-    return [...allNewAdvertisers].sort((a, b) => {
+    return [...filteredNewAdvertisers].sort((a, b) => {
       let aValue: any = a[sortField];
       let bValue: any = b[sortField];
       if (sortField === 'spend' || sortField === 'ads') {
@@ -156,7 +164,7 @@ export const NewAdvertisersTable = ({ selectedPeriod }: NewAdvertisersTableProps
         return aValue < bValue ? 1 : -1;
       }
     });
-  }, [allNewAdvertisers, sortField, sortDirection]);
+  }, [filteredNewAdvertisers, sortField, sortDirection]);
 
   // Pagination logic
   const totalPages = Math.ceil(sortedNewAdvertisers.length / itemsPerPage);

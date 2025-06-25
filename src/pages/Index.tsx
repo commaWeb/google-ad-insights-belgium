@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,7 @@ const Index = () => {
   const [selectedView, setSelectedView] = useState("top-advertisers");
   const [isAuthenticatedState, setIsAuthenticatedState] = useState(false);
   const [selectedTool, setSelectedTool] = useState<'dashboard' | 'scraper'>('dashboard');
+  const [selectedCategory, setSelectedCategory] = useState("all");
 
   // Initialize authentication state on component mount
   useEffect(() => {
@@ -50,9 +51,9 @@ const Index = () => {
   };
 
   // Get query results and errors
-  const { data: adSpendData, error: adSpendError } = useBelgiumAdSpendData(selectedPeriod);
-  const { data: statsData, error: statsError } = useBelgiumAdvertiserStats();
-  const { data: newAdvertisersData, error: newAdvertisersError } = useBelgiumNewAdvertisers(selectedPeriod);
+  const { data: adSpendData, error: adSpendError } = useBelgiumAdSpendData(selectedPeriod, selectedCategory);
+  const { data: statsData, error: statsError } = useBelgiumAdvertiserStats(selectedCategory);
+  const { data: newAdvertisersData, error: newAdvertisersError } = useBelgiumNewAdvertisers(selectedPeriod, selectedCategory);
   
   // Check if we're using mock data - this happens when:
   // 1. User is not authenticated, OR
@@ -73,6 +74,17 @@ const Index = () => {
     (!isAuthenticatedState ? 'NOT_AUTHENTICATED: Please sign in to access real data' : '');
 
   console.log('Index: Auth state:', isAuthenticatedState, 'Using mock data:', isUsingMockData, 'Has errors:', hasErrors, 'Error:', errorMessage);
+
+  // Compute unique categories from real data
+  const uniqueCategories = useMemo(() => {
+    if (!adSpendData || adSpendData.length === 0) return [];
+    const cats = new Set<string>();
+    adSpendData.forEach((item: any) => {
+      if (item.category) cats.add(item.category.toLowerCase());
+      else if (item.topic) cats.add(item.topic.toLowerCase());
+    });
+    return Array.from(cats);
+  }, [adSpendData]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -151,6 +163,18 @@ const Index = () => {
               </SelectContent>
             </Select>
 
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {uniqueCategories.map(cat => (
+                  <SelectItem key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             <Select value={selectedView} onValueChange={setSelectedView}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Advertiser view" />
@@ -197,13 +221,13 @@ const Index = () => {
             </CardHeader>
             <CardContent>
               {selectedView === "top-advertisers" && (
-                <TopAdvertisersTable selectedPeriod={selectedPeriod} />
+                <TopAdvertisersTable selectedPeriod={selectedPeriod} selectedCategory={selectedCategory} />
               )}
               {selectedView === "new-advertisers" && (
-                <NewAdvertisersTable selectedPeriod={selectedPeriod} />
+                <NewAdvertisersTable selectedPeriod={selectedPeriod} selectedCategory={selectedCategory} />
               )}
               {selectedView === "all-advertisers" && (
-                <AllAdvertisersTable selectedPeriod={selectedPeriod} />
+                <AllAdvertisersTable selectedPeriod={selectedPeriod} selectedCategory={selectedCategory} />
               )}
             </CardContent>
           </Card>

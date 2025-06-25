@@ -8,12 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 interface AllAdvertisersTableProps {
   selectedPeriod: string;
+  selectedCategory: string;
 }
 
 type SortField = 'name' | 'advertiserId' | 'spend' | 'ads' | 'firstAdDate' | 'lastAdDate' | 'region';
 type SortDirection = 'asc' | 'desc';
 
-export const AllAdvertisersTable = ({ selectedPeriod }: AllAdvertisersTableProps) => {
+export const AllAdvertisersTable = ({ selectedPeriod, selectedCategory }: AllAdvertisersTableProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -31,14 +32,20 @@ export const AllAdvertisersTable = ({ selectedPeriod }: AllAdvertisersTableProps
         firstAdDate: item.first_ad_date || "N/A",
         lastAdDate: item.last_ad_date || "N/A",
         region: "BE",
+        category: item.category || item.topic || "unknown"
       }));
     }
     return [];
   }, [allAdvertisersData]);
 
+  // Filter by category if not 'all'
+  const filteredAdvertisers = selectedCategory === 'all'
+    ? allAdvertisers
+    : allAdvertisers.filter(item => (item.category || '').toLowerCase() === selectedCategory);
+
   // Sorting logic
   const sortedAdvertisers = useMemo(() => {
-    return [...allAdvertisers].sort((a, b) => {
+    return [...filteredAdvertisers].sort((a, b) => {
       let aValue: any = a[sortField];
       let bValue: any = b[sortField];
       if (sortField === 'spend' || sortField === 'ads') {
@@ -57,7 +64,7 @@ export const AllAdvertisersTable = ({ selectedPeriod }: AllAdvertisersTableProps
         return aValue < bValue ? 1 : -1;
       }
     });
-  }, [allAdvertisers, sortField, sortDirection]);
+  }, [filteredAdvertisers, sortField, sortDirection]);
 
   // Pagination logic
   const totalPages = itemsPerPage === -1 ? 1 : Math.ceil(sortedAdvertisers.length / itemsPerPage);
