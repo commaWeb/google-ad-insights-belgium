@@ -5,7 +5,7 @@ const CLIENT_SECRET = import.meta.env.VITE_GOOGLE_CLIENT_SECRET;
 
 if (!CLIENT_ID || !CLIENT_SECRET) {
   throw new Error('Google OAuth Client ID/Secret are not set in environment variables.');
-}
+} 
 
 const REDIRECT_URI = typeof window !== 'undefined' && window.location.origin
   ? `${window.location.origin}/oauth/callback`
