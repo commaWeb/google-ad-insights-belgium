@@ -10,7 +10,8 @@ if (!CLIENT_ID || !CLIENT_SECRET) {
 const REDIRECT_URI = typeof window !== 'undefined' && window.location.origin
   ? `${window.location.origin}/oauth/callback`
 //   : 'http://localhost:8080/oauth/callback';
-  : 'https://google-ad-insights-belgium.vercel.app/oauth/callback';
+//   : 'https://google-ad-insights-belgium.vercel.app/oauth/callback';
+  : 'https://insights.commaweb.be/oauth/callback';
 
 const SCOPES = 'https://www.googleapis.com/auth/bigquery.readonly https://www.googleapis.com/auth/cloud-platform.read-only';
 

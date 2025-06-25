@@ -486,6 +486,7 @@ export const getAllBelgiumAdvertisers = async (days: number, isYTD: boolean = fa
   try {
     console.log('🔍 DEBUG: getAllBelgiumAdvertisers called');
     const dateFilter = getDateFilter(days, isYTD);
+    const limitClause = limit > 0 ? `LIMIT ${limit}` : '';
     const query = `
       SELECT 
         advertiser_disclosed_name AS advertiser_name,
@@ -508,7 +509,7 @@ export const getAllBelgiumAdvertisers = async (days: number, isYTD: boolean = fa
       GROUP BY advertiser_disclosed_name, advertiser_id, category
       HAVING total_spend > 0
       ORDER BY advertiser_name ASC
-      LIMIT ${limit}
+      ${limitClause}
     `;
     console.log('🔍 DEBUG: Executing all advertisers query:', query);
     const data = await executeBigQueryQuery(query);

@@ -60,9 +60,9 @@ export const AllAdvertisersTable = ({ selectedPeriod }: AllAdvertisersTableProps
   }, [allAdvertisers, sortField, sortDirection]);
 
   // Pagination logic
-  const totalPages = Math.ceil(sortedAdvertisers.length / itemsPerPage);
+  const totalPages = itemsPerPage === -1 ? 1 : Math.ceil(sortedAdvertisers.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedAdvertisers = sortedAdvertisers.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedAdvertisers = itemsPerPage === -1 ? sortedAdvertisers : sortedAdvertisers.slice(startIndex, startIndex + itemsPerPage);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -102,6 +102,7 @@ export const AllAdvertisersTable = ({ selectedPeriod }: AllAdvertisersTableProps
             <SelectItem value="20">20</SelectItem>
             <SelectItem value="50">50</SelectItem>
             <SelectItem value="100">100</SelectItem>
+            <SelectItem value="-1">All</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -166,7 +167,7 @@ export const AllAdvertisersTable = ({ selectedPeriod }: AllAdvertisersTableProps
           </TableBody>
         </Table>
       </div>
-      {totalPages > 1 && (
+      {totalPages > 1 && itemsPerPage !== -1 && (
         <Pagination>
           <PaginationContent>
             <PaginationItem>
