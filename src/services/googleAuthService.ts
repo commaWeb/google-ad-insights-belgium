@@ -74,4 +74,10 @@ export function getAccessToken() {
 export function signOut() {
   localStorage.removeItem('google_access_token');
   localStorage.removeItem('google_token_expiry');
+}
+
+export const logout = signOut;
+
+export function initGoogleAuth() {
+  // No-op: placeholder for future Google Auth initialization logic if needed
 } 
