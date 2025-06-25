@@ -80,19 +80,17 @@ export const GoogleSignIn = ({ onAuthChange }: GoogleSignInProps) => {
 
   if (isAuth) {
     return (
-      <div className="max-w-2xl mx-auto mt-4 mb-2">
-        <div className="flex items-center gap-2 bg-green-50 border border-green-100 rounded px-3 py-2 text-green-700 text-sm shadow-none">
-          <span className="text-green-500 text-base">✔️</span>
-          <span>
-            Authenticated with Google. <span className="text-green-600 font-medium">Real data</span> will be displayed.
-          </span>
+      <div className="fixed top-6 right-8 z-50">
+        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold shadow border border-green-200">
+          <span className="text-green-500 text-base">✔</span>
+          Authenticated
           <button
-            className="ml-auto px-2 py-1 text-xs rounded border border-green-200 bg-white hover:bg-green-100 transition"
+            className="ml-2 px-2 py-0.5 text-xs rounded border border-green-200 bg-white hover:bg-green-100 transition"
             onClick={handleSignOut}
           >
             Sign Out
           </button>
-        </div>
+        </span>
       </div>
     );
   }
