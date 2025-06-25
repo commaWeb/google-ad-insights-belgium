@@ -9,7 +9,7 @@ if (!CLIENT_ID || !CLIENT_SECRET) {
 
 const REDIRECT_URI = typeof window !== 'undefined' && window.location.origin
   ? `${window.location.origin}/oauth/callback`
-  : 'http://localhost:8080/oauth/callback';
+  : 'https://google-ad-insights-belgium.vercel.app/';
 
 const SCOPES = 'https://www.googleapis.com/auth/bigquery.readonly https://www.googleapis.com/auth/cloud-platform.read-only';
 
