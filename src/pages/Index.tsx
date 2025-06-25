@@ -13,11 +13,13 @@ import { GoogleSignIn } from "@/components/GoogleSignIn";
 import { useBelgiumAdSpendData, useBelgiumAdvertiserStats, useBelgiumNewAdvertisers } from "@/hooks/useBigQueryData";
 import { isAuthenticated } from "@/services/googleAuthService";
 import { AllAdvertisersTable } from "@/components/AllAdvertisersTable";
+import { CompetitorAdScraper } from "../components/CompetitorAdScraper";
 
 const Index = () => {
   const [selectedPeriod, setSelectedPeriod] = useState("30d");
   const [selectedView, setSelectedView] = useState("top-advertisers");
   const [isAuthenticatedState, setIsAuthenticatedState] = useState(false);
+  const [selectedTool, setSelectedTool] = useState<'dashboard' | 'scraper'>('dashboard');
 
   // Initialize authentication state on component mount
   useEffect(() => {
@@ -99,91 +101,109 @@ const Index = () => {
               </div>
               <p className="text-slate-600 text-base mt-1 text-center sm:text-right">Transparency data from Google's advertising platform</p>
             </div>
+            <div className="flex gap-2 mt-4 sm:mt-0">
+              <button
+                className={`px-4 py-2 rounded-full font-semibold border transition-colors ${selectedTool === 'dashboard' ? 'bg-blue-600 text-white border-blue-700' : 'bg-white text-blue-700 border-blue-300 hover:bg-blue-50'}`}
+                onClick={() => setSelectedTool('dashboard')}
+              >
+                Dashboard
+              </button>
+              <button
+                className={`px-4 py-2 rounded-full font-semibold border transition-colors ${selectedTool === 'scraper' ? 'bg-blue-600 text-white border-blue-700' : 'bg-white text-blue-700 border-blue-300 hover:bg-blue-50'}`}
+                onClick={() => setSelectedTool('scraper')}
+              >
+                Competitor Ad Scraper
+              </button>
+            </div>
           </div>
         </div>
         <div className="border-t border-slate-200" />
       </div>
 
       {/* Main Dashboard */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Google Sign-In */}
-        <GoogleSignIn onAuthChange={handleAuthChange} />
+      {selectedTool === 'dashboard' ? (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Google Sign-In */}
+          <GoogleSignIn onAuthChange={handleAuthChange} />
 
-        {/* Mock Data Alert - Always show when using mock data */}
-        <MockDataAlert isUsingMockData={isUsingMockData} errorMessage={errorMessage} />
+          {/* Mock Data Alert - Always show when using mock data */}
+          <MockDataAlert isUsingMockData={isUsingMockData} errorMessage={errorMessage} />
 
-        {/* Filters */}
-        <div className="flex flex-wrap gap-4 mb-8">
-          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7d">Last 7 days</SelectItem>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="90d">Last 90 days</SelectItem>
-              <SelectItem value="1y">Last year</SelectItem>
-              <SelectItem value="ytd">Year to Date 2025</SelectItem>
-            </SelectContent>
-          </Select>
+          {/* Filters */}
+          <div className="flex flex-wrap gap-4 mb-8">
+            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7d">Last 7 days</SelectItem>
+                <SelectItem value="30d">Last 30 days</SelectItem>
+                <SelectItem value="90d">Last 90 days</SelectItem>
+                <SelectItem value="1y">Last year</SelectItem>
+                <SelectItem value="ytd">Year to Date 2025</SelectItem>
+              </SelectContent>
+            </Select>
 
-          <Select value={selectedView} onValueChange={setSelectedView}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Advertiser view" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="top-advertisers">Top Advertisers</SelectItem>
-              <SelectItem value="new-advertisers">New Advertisers</SelectItem>
-              <SelectItem value="all-advertisers">All Advertisers</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+            <Select value={selectedView} onValueChange={setSelectedView}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Advertiser view" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="top-advertisers">Top Advertisers</SelectItem>
+                <SelectItem value="new-advertisers">New Advertisers</SelectItem>
+                <SelectItem value="all-advertisers">All Advertisers</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        {/* Stats Cards */}
-        <StatsCards selectedPeriod={selectedPeriod} />
+          {/* Stats Cards */}
+          <StatsCards selectedPeriod={selectedPeriod} />
 
-        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {selectedView === "top-advertisers" ? (
-                <>
-                  <DollarSign className="w-5 h-5 text-yellow-600" />
-                  Top Advertisers
-                </>
-              ) : selectedView === "new-advertisers" ? (
-                <>
-                  <Sparkles className="w-5 h-5 text-purple-600" />
-                  New Advertisers
-                </>
-              ) : (
-                <>
-                  <Users className="w-5 h-5 text-blue-600" />
-                  All Advertisers
-                </>
+          <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                {selectedView === "top-advertisers" ? (
+                  <>
+                    <DollarSign className="w-5 h-5 text-yellow-600" />
+                    Top Advertisers
+                  </>
+                ) : selectedView === "new-advertisers" ? (
+                  <>
+                    <Sparkles className="w-5 h-5 text-purple-600" />
+                    New Advertisers
+                  </>
+                ) : (
+                  <>
+                    <Users className="w-5 h-5 text-blue-600" />
+                    All Advertisers
+                  </>
+                )}
+              </CardTitle>
+              <CardDescription>
+                {selectedView === "top-advertisers" 
+                  ? "Highest spending advertisers in the selected period"
+                  : selectedView === "new-advertisers"
+                    ? "Advertisers that started advertising in the selected period"
+                    : "All advertisers in the selected period"
+                }
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {selectedView === "top-advertisers" && (
+                <TopAdvertisersTable selectedPeriod={selectedPeriod} />
               )}
-            </CardTitle>
-            <CardDescription>
-              {selectedView === "top-advertisers" 
-                ? "Highest spending advertisers in the selected period"
-                : selectedView === "new-advertisers"
-                  ? "Advertisers that started advertising in the selected period"
-                  : "All advertisers in the selected period"
-              }
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {selectedView === "top-advertisers" && (
-              <TopAdvertisersTable selectedPeriod={selectedPeriod} />
-            )}
-            {selectedView === "new-advertisers" && (
-              <NewAdvertisersTable selectedPeriod={selectedPeriod} />
-            )}
-            {selectedView === "all-advertisers" && (
-              <AllAdvertisersTable selectedPeriod={selectedPeriod} />
-            )}
-          </CardContent>
-        </Card>
-      </div>
+              {selectedView === "new-advertisers" && (
+                <NewAdvertisersTable selectedPeriod={selectedPeriod} />
+              )}
+              {selectedView === "all-advertisers" && (
+                <AllAdvertisersTable selectedPeriod={selectedPeriod} />
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        <CompetitorAdScraper />
+      )}
     </div>
   );
 };
