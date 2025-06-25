@@ -1,26 +1,24 @@
+import React from "react";
 import { useState, useMemo } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
+import { Button } from "./ui/button";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "./ui/pagination";
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
-import { useBelgiumAdSpendData, useAdvertiserDomains } from "@/hooks/useBigQueryData";
+import { useBelgiumAdSpendData, useAdvertiserDomains } from "../hooks/useBigQueryData";
 import { BelgiumDataBanner } from "./BelgiumDataBanner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { advertiserCategoryMap } from "@/data/advertiserCategories";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 interface TopAdvertisersTableProps {
   selectedPeriod: string;
-  selectedCategory?: string;
 }
 
 type SortField = 'name' | 'category' | 'spend' | 'domain';
 type SortDirection = 'asc' | 'desc';
 
-export const TopAdvertisersTable = ({ selectedPeriod, selectedCategory = "all" }: TopAdvertisersTableProps) => {
-  console.log('TopAdvertisersTable: Rendering with period:', selectedPeriod, 'category:', selectedCategory);
+export const TopAdvertisersTable = ({ selectedPeriod }: TopAdvertisersTableProps) => {
+  console.log('TopAdvertisersTable: Rendering with period:', selectedPeriod);
   
-  const { data: adSpendData, isLoading, error } = useBelgiumAdSpendData(selectedPeriod, selectedCategory);
+  const { data: adSpendData, isLoading, error } = useBelgiumAdSpendData(selectedPeriod);
   const { data: domainsData } = useAdvertiserDomains();
   
   const [currentPage, setCurrentPage] = useState(1);
@@ -84,7 +82,7 @@ export const TopAdvertisersTable = ({ selectedPeriod, selectedCategory = "all" }
   // Create domain lookup map
   const domainMap = useMemo(() => {
     const map = new Map();
-    if (domainsData) {
+    if (Array.isArray(domainsData)) {
       domainsData.forEach((item: any) => {
         map.set(item.advertiser_name, item.advertiser_url);
       });
@@ -95,7 +93,6 @@ export const TopAdvertisersTable = ({ selectedPeriod, selectedCategory = "all" }
   // Transform real data or use mock data
   const allAdvertisers = useMemo(() => {
     if (adSpendData && adSpendData.length > 0 && !adSpendData[0]._noBelgiumData) {
-      console.log('TopAdvertisersTable: Using real ad spend data:', adSpendData.length, 'items');
       return adSpendData.map((item: any) => ({
         name: item.advertiser_name || "Unknown",
         advertiserId: item.advertiser_id || "N/A",
@@ -104,10 +101,8 @@ export const TopAdvertisersTable = ({ selectedPeriod, selectedCategory = "all" }
         firstAdDate: item.first_ad_date || "N/A",
         lastAdDate: item.last_ad_date || "N/A",
         region: "BE",
-        category: advertiserCategoryMap[item.advertiser_id] || advertiserCategoryMap[item.advertiser_name] || "Unknown",
       }));
     }
-    console.log('TopAdvertisersTable: Using mock data');
     return mockAdvertisers;
   }, [adSpendData, domainMap]);
 
@@ -120,10 +115,7 @@ export const TopAdvertisersTable = ({ selectedPeriod, selectedCategory = "all" }
   });
 
   // Filter by category if not 'all'
-  const filteredAdvertisers = useMemo(() => {
-    if (selectedCategory === "all") return allAdvertisers;
-    return allAdvertisers.filter(a => a.category === selectedCategory);
-  }, [allAdvertisers, selectedCategory]);
+  const filteredAdvertisers = allAdvertisers;
 
   // Sorting logic
   const sortedAdvertisers = useMemo(() => {
@@ -184,7 +176,10 @@ export const TopAdvertisersTable = ({ selectedPeriod, selectedCategory = "all" }
 
   const formatSpend = (spend: number | string) => {
     if (typeof spend === 'number') {
-      return `€${Math.round(spend / 1000)}K`;
+      if (spend < 1000) {
+        return `€${spend.toLocaleString(undefined, { maximumFractionDigits: 1 })}`;
+      }
+      return `€${(spend / 1000).toFixed(1)}K`;
     }
     return spend;
   };
@@ -236,17 +231,20 @@ export const TopAdvertisersTable = ({ selectedPeriod, selectedCategory = "all" }
                   <TableHead className="font-semibold">First Ad Date</TableHead>
                   <TableHead className="font-semibold">Last Ad Date</TableHead>
                   <TableHead className="font-semibold">Region</TableHead>
-                  <TableHead className="font-semibold">
-                    <Button variant="ghost" onClick={() => handleSort('category')} className="h-auto p-0 font-semibold">
-                      Category {getSortIcon('category')}
-                    </Button>
-                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedAdvertisers.map((advertiser, index) => (
                   <TableRow key={index} className="hover:bg-slate-50 transition-colors">
-                    <TableCell className="font-medium">{advertiser.name}</TableCell>
+                    <TableCell className="font-medium">
+                      {domainMap.get(advertiser.name) ? (
+                        <a href={`https://${domainMap.get(advertiser.name)}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                          {advertiser.name}
+                        </a>
+                      ) : (
+                        advertiser.name
+                      )}
+                    </TableCell>
                     <TableCell className="text-sm text-slate-600">
                       <span title={advertiser.advertiserId}>{advertiser.advertiserId}</span>
                     </TableCell>
@@ -255,11 +253,6 @@ export const TopAdvertisersTable = ({ selectedPeriod, selectedCategory = "all" }
                     <TableCell className="text-sm text-slate-600">{advertiser.firstAdDate}</TableCell>
                     <TableCell className="text-sm text-slate-600">{advertiser.lastAdDate}</TableCell>
                     <TableCell className="text-sm text-slate-600">{advertiser.region}</TableCell>
-                    <TableCell className="text-sm text-slate-600">
-                      <Badge variant="secondary" className={getCategoryColor(advertiser.category)}>
-                        {advertiser.category}
-                      </Badge>
-                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -273,6 +266,7 @@ export const TopAdvertisersTable = ({ selectedPeriod, selectedCategory = "all" }
                   <PaginationPrevious 
                     onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                     className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    size="default"
                   />
                 </PaginationItem>
                 
@@ -284,6 +278,7 @@ export const TopAdvertisersTable = ({ selectedPeriod, selectedCategory = "all" }
                         onClick={() => setCurrentPage(pageNum)}
                         isActive={currentPage === pageNum}
                         className="cursor-pointer"
+                        size="icon"
                       >
                         {pageNum}
                       </PaginationLink>
@@ -295,6 +290,7 @@ export const TopAdvertisersTable = ({ selectedPeriod, selectedCategory = "all" }
                   <PaginationNext 
                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                     className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    size="default"
                   />
                 </PaginationItem>
               </PaginationContent>

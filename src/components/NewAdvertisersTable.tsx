@@ -1,23 +1,22 @@
+import React from "react";
 import { useState, useMemo } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
+import { Button } from "./ui/button";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "./ui/pagination";
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
-import { useBelgiumNewAdvertisers, useAdvertiserDomains } from "@/hooks/useBigQueryData";
+import { useBelgiumNewAdvertisers, useAdvertiserDomains } from "../hooks/useBigQueryData";
 import { BelgiumDataBanner } from "./BelgiumDataBanner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 interface NewAdvertisersTableProps {
   selectedPeriod: string;
-  selectedCategory?: string;
 }
 
 type SortField = 'name' | 'advertiserId' | 'spend' | 'ads' | 'firstAdDate' | 'lastAdDate' | 'region';
 type SortDirection = 'asc' | 'desc';
 
-export const NewAdvertisersTable = ({ selectedPeriod, selectedCategory = "all" }: NewAdvertisersTableProps) => {
-  const { data: newAdvertisersData, isLoading, error } = useBelgiumNewAdvertisers(selectedPeriod, selectedCategory, 50);
+export const NewAdvertisersTable = ({ selectedPeriod }: NewAdvertisersTableProps) => {
+  const { data: newAdvertisersData, isLoading, error } = useBelgiumNewAdvertisers(selectedPeriod, undefined, 50);
   const { data: domainsData } = useAdvertiserDomains();
   
   const [currentPage, setCurrentPage] = useState(1);
@@ -96,7 +95,7 @@ export const NewAdvertisersTable = ({ selectedPeriod, selectedCategory = "all" }
   // Create domain lookup map
   const domainMap = useMemo(() => {
     const map = new Map();
-    if (domainsData) {
+    if (Array.isArray(domainsData)) {
       domainsData.forEach((item: any) => {
         map.set(item.advertiser_name, item.advertiser_url);
       });
@@ -201,7 +200,10 @@ export const NewAdvertisersTable = ({ selectedPeriod, selectedCategory = "all" }
 
   const formatSpend = (spend: number | string) => {
     if (typeof spend === 'number') {
-      return `€${Math.round(spend / 1000)}K`;
+      if (spend < 1000) {
+        return `€${spend.toLocaleString(undefined, { maximumFractionDigits: 1 })}`;
+      }
+      return `€${(spend / 1000).toFixed(1)}K`;
     }
     return spend;
   };
@@ -297,6 +299,7 @@ export const NewAdvertisersTable = ({ selectedPeriod, selectedCategory = "all" }
               <PaginationPrevious 
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                size="default"
               />
             </PaginationItem>
             
@@ -308,6 +311,7 @@ export const NewAdvertisersTable = ({ selectedPeriod, selectedCategory = "all" }
                     onClick={() => setCurrentPage(pageNum)}
                     isActive={currentPage === pageNum}
                     className="cursor-pointer"
+                    size="icon"
                   >
                     {pageNum}
                   </PaginationLink>
@@ -319,6 +323,7 @@ export const NewAdvertisersTable = ({ selectedPeriod, selectedCategory = "all" }
               <PaginationNext 
                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                 className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                size="default"
               />
             </PaginationItem>
           </PaginationContent>

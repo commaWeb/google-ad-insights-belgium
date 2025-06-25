@@ -8,19 +8,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 interface AllAdvertisersTableProps {
   selectedPeriod: string;
-  selectedCategory?: string;
 }
 
 type SortField = 'name' | 'advertiserId' | 'spend' | 'ads' | 'firstAdDate' | 'lastAdDate' | 'region';
 type SortDirection = 'asc' | 'desc';
 
-export const AllAdvertisersTable = ({ selectedPeriod, selectedCategory = "all" }: AllAdvertisersTableProps) => {
+export const AllAdvertisersTable = ({ selectedPeriod }: AllAdvertisersTableProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [itemsPerPage, setItemsPerPage] = useState(50);
 
-  const { data: allAdvertisersData, isLoading, error } = useAllBelgiumAdvertisers(selectedPeriod, selectedCategory, itemsPerPage);
+  const { data: allAdvertisersData, isLoading, error } = useAllBelgiumAdvertisers(selectedPeriod, undefined, itemsPerPage);
 
   const allAdvertisers = useMemo(() => {
     if (allAdvertisersData && allAdvertisersData.length > 0 && !allAdvertisersData[0]._noBelgiumData) {
@@ -82,7 +81,10 @@ export const AllAdvertisersTable = ({ selectedPeriod, selectedCategory = "all" }
 
   const formatSpend = (spend: number | string) => {
     if (typeof spend === 'number') {
-      return `€${Math.round(spend / 1000)}K`;
+      if (spend < 1000) {
+        return `€${spend.toLocaleString(undefined, { maximumFractionDigits: 1 })}`;
+      }
+      return `€${(spend / 1000).toFixed(1)}K`;
     }
     return spend;
   };

@@ -16,7 +16,6 @@ import { AllAdvertisersTable } from "@/components/AllAdvertisersTable";
 
 const Index = () => {
   const [selectedPeriod, setSelectedPeriod] = useState("30d");
-  const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedView, setSelectedView] = useState("top-advertisers");
   const [isAuthenticatedState, setIsAuthenticatedState] = useState(false);
 
@@ -49,9 +48,9 @@ const Index = () => {
   };
 
   // Get query results and errors
-  const { data: adSpendData, error: adSpendError } = useBelgiumAdSpendData(selectedPeriod, selectedCategory);
-  const { data: statsData, error: statsError } = useBelgiumAdvertiserStats(selectedCategory);
-  const { data: newAdvertisersData, error: newAdvertisersError } = useBelgiumNewAdvertisers(selectedPeriod, selectedCategory);
+  const { data: adSpendData, error: adSpendError } = useBelgiumAdSpendData(selectedPeriod);
+  const { data: statsData, error: statsError } = useBelgiumAdvertiserStats();
+  const { data: newAdvertisersData, error: newAdvertisersError } = useBelgiumNewAdvertisers(selectedPeriod);
   
   // Check if we're using mock data - this happens when:
   // 1. User is not authenticated, OR
@@ -123,18 +122,6 @@ const Index = () => {
             </SelectContent>
           </Select>
 
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="political">Political</SelectItem>
-              <SelectItem value="commercial">Commercial</SelectItem>
-              <SelectItem value="nonprofit">Non-profit</SelectItem>
-            </SelectContent>
-          </Select>
-
           <Select value={selectedView} onValueChange={setSelectedView}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Advertiser view" />
@@ -148,7 +135,7 @@ const Index = () => {
         </div>
 
         {/* Stats Cards */}
-        <StatsCards selectedPeriod={selectedPeriod} selectedCategory={selectedCategory} />
+        <StatsCards selectedPeriod={selectedPeriod} />
 
         <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
           <CardHeader>
@@ -181,13 +168,13 @@ const Index = () => {
           </CardHeader>
           <CardContent>
             {selectedView === "top-advertisers" && (
-              <TopAdvertisersTable selectedPeriod={selectedPeriod} selectedCategory={selectedCategory} />
+              <TopAdvertisersTable selectedPeriod={selectedPeriod} />
             )}
             {selectedView === "new-advertisers" && (
-              <NewAdvertisersTable selectedPeriod={selectedPeriod} selectedCategory={selectedCategory} />
+              <NewAdvertisersTable selectedPeriod={selectedPeriod} />
             )}
             {selectedView === "all-advertisers" && (
-              <AllAdvertisersTable selectedPeriod={selectedPeriod} selectedCategory={selectedCategory} />
+              <AllAdvertisersTable selectedPeriod={selectedPeriod} />
             )}
           </CardContent>
         </Card>

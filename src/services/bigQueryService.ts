@@ -141,9 +141,9 @@ const transformBigQueryResults = (data: BigQueryResponse) => {
 // Helper function to get date filter based on period
 const getDateFilter = (days: number, isYTD: boolean) => {
   if (isYTD) {
-    return `AND date_range_start >= '2025-01-01'`;
+    return `AND CAST(region.first_shown AS DATE) >= '2025-01-01'`;
   }
-  return `AND date_range_start >= DATE_SUB(CURRENT_DATE(), INTERVAL ${days} DAY)`;
+  return `AND CAST(region.first_shown AS DATE) >= DATE_SUB(CURRENT_DATE(), INTERVAL ${days} DAY)`;
 };
 
 // Helper function to get category filter
@@ -310,16 +310,25 @@ export const getBelgiumAdSpendData = async (days: number, isYTD: boolean = false
 
     const mainQuery = `
       SELECT 
-        advertiser_name,
+        advertiser_disclosed_name AS advertiser_name,
         advertiser_id,
-        SUM(spend_range_max_usd) AS total_spend,
-        SUM(num_of_days) AS total_ads,
-        MIN(date_range_start) AS first_ad_date,
-        MAX(date_range_start) AS last_ad_date
-      FROM \`bigquery-public-data.google_political_ads.creative_stats\`
-      WHERE (regions = 'BE' OR regions LIKE '%,BE,%' OR regions LIKE 'BE,%' OR regions LIKE '%,BE')
-      ${dateFilter}
-      GROUP BY advertiser_name, advertiser_id
+        topic AS category,
+        SUM(CAST(times_shown_upper_bound AS FLOAT64)) AS total_spend,
+        COUNT(DISTINCT creative_id) AS total_ads,
+        MIN(first_shown) AS first_ad_date,
+        MAX(last_shown) AS last_ad_date,
+        ARRAY_AGG(DISTINCT TO_JSON_STRING(surfaces)) AS surfaces
+      FROM (
+        SELECT advertiser_disclosed_name, advertiser_id, creative_id, topic, region.times_shown_upper_bound AS times_shown_upper_bound, region.first_shown AS first_shown, region.last_shown AS last_shown, region.surface_serving_stats.surface_serving_stats AS surfaces
+        FROM \`bigquery-public-data.google_ads_transparency_center.creative_stats\`,
+          UNNEST(region_stats) AS region
+        WHERE region.region_code = 'BE'
+          AND advertiser_location = 'BE'
+          ${dateFilter}
+        GROUP BY advertiser_disclosed_name, advertiser_id, creative_id, topic, region.times_shown_upper_bound, region.first_shown, region.last_shown, region.surface_serving_stats.surface_serving_stats
+      )
+      GROUP BY advertiser_disclosed_name, advertiser_id, category
+      HAVING total_spend > 0
       ORDER BY total_spend DESC
       LIMIT 50
     `;
@@ -356,11 +365,17 @@ export const getBelgiumAdvertiserStats = async (category: string = "all", days?:
     const query = `
       SELECT 
         COUNT(DISTINCT advertiser_id) as total_advertisers,
-        SUM(num_of_days) as total_ads,
-        SUM(spend_range_max_usd) as total_spend
-      FROM \`bigquery-public-data.google_political_ads.creative_stats\`
-      WHERE (regions = 'BE' OR regions LIKE '%,BE,%' OR regions LIKE 'BE,%' OR regions LIKE '%,BE')
-      ${dateFilter}
+        COUNT(DISTINCT creative_id) as total_ads,
+        SUM(CAST(times_shown_upper_bound AS FLOAT64)) as total_spend
+      FROM (
+        SELECT advertiser_id, creative_id, region.times_shown_upper_bound AS times_shown_upper_bound
+        FROM \`bigquery-public-data.google_ads_transparency_center.creative_stats\`,
+          UNNEST(region_stats) AS region
+        WHERE region.region_code = 'BE'
+          AND advertiser_location = 'BE'
+          ${dateFilter}
+        GROUP BY advertiser_id, creative_id, region.times_shown_upper_bound
+      )
     `;
 
     console.log('🔍 DEBUG: Executing stats query with date filter:', query);
@@ -392,15 +407,24 @@ export const getBelgiumNewAdvertisers = async (days: number, isYTD: boolean = fa
 
     const query = `
       SELECT 
-        advertiser_name,
+        advertiser_disclosed_name AS advertiser_name,
         advertiser_id,
-        MIN(date_range_start) AS first_ad_date,
-        COUNT(*) AS total_ads,
-        MAX(spend_range_max_usd) AS max_spend
-      FROM \`bigquery-public-data.google_political_ads.creative_stats\`
-      WHERE (regions = 'BE' OR regions LIKE '%,BE,%' OR regions LIKE 'BE,%' OR regions LIKE '%,BE')
-      ${dateFilter}
-      GROUP BY advertiser_name, advertiser_id
+        topic AS category,
+        MIN(first_shown) AS first_ad_date,
+        COUNT(DISTINCT creative_id) AS total_ads,
+        MAX(CAST(times_shown_upper_bound AS FLOAT64)) AS max_spend,
+        ARRAY_AGG(DISTINCT TO_JSON_STRING(surfaces)) AS surfaces
+      FROM (
+        SELECT advertiser_disclosed_name, advertiser_id, creative_id, topic, region.times_shown_upper_bound AS times_shown_upper_bound, region.first_shown AS first_shown, region.surface_serving_stats.surface_serving_stats AS surfaces
+        FROM \`bigquery-public-data.google_ads_transparency_center.creative_stats\`,
+          UNNEST(region_stats) AS region
+        WHERE region.region_code = 'BE'
+          AND advertiser_location = 'BE'
+          ${dateFilter}
+        GROUP BY advertiser_disclosed_name, advertiser_id, creative_id, topic, region.times_shown_upper_bound, region.first_shown, region.surface_serving_stats.surface_serving_stats
+      )
+      GROUP BY advertiser_disclosed_name, advertiser_id, category
+      HAVING max_spend > 0
       ORDER BY first_ad_date DESC
       LIMIT ${limit}
     `;
@@ -430,10 +454,11 @@ export const getAdvertiserDomains = async () => {
 
     const query = `
       SELECT DISTINCT
-        advertiser_name,
+        advertiser_disclosed_name AS advertiser_name,
         advertiser_id
-      FROM \`bigquery-public-data.google_political_ads.creative_stats\`
-      WHERE regions = 'BE' OR regions LIKE '%,BE,%' OR regions LIKE 'BE,%' OR regions LIKE '%,BE'
+      FROM \`bigquery-public-data.google_ads_transparency_center.creative_stats\`,
+        UNNEST(region_stats) AS region
+      WHERE region.region_code = 'BE'
       LIMIT 50
     `;
 
@@ -463,16 +488,25 @@ export const getAllBelgiumAdvertisers = async (days: number, isYTD: boolean = fa
     const dateFilter = getDateFilter(days, isYTD);
     const query = `
       SELECT 
-        advertiser_name,
+        advertiser_disclosed_name AS advertiser_name,
         advertiser_id,
-        SUM(spend_range_max_usd) AS total_spend,
-        SUM(num_of_days) AS total_ads,
-        MIN(date_range_start) AS first_ad_date,
-        MAX(date_range_start) AS last_ad_date
-      FROM \`bigquery-public-data.google_political_ads.creative_stats\`
-      WHERE (regions = 'BE' OR regions LIKE '%,BE,%' OR regions LIKE 'BE,%' OR regions LIKE '%,BE')
-      ${dateFilter}
-      GROUP BY advertiser_name, advertiser_id
+        topic AS category,
+        SUM(CAST(times_shown_upper_bound AS FLOAT64)) AS total_spend,
+        COUNT(DISTINCT creative_id) AS total_ads,
+        MIN(first_shown) AS first_ad_date,
+        MAX(last_shown) AS last_ad_date,
+        ARRAY_AGG(DISTINCT TO_JSON_STRING(surfaces)) AS surfaces
+      FROM (
+        SELECT advertiser_disclosed_name, advertiser_id, creative_id, topic, region.times_shown_upper_bound AS times_shown_upper_bound, region.first_shown AS first_shown, region.last_shown AS last_shown, region.surface_serving_stats.surface_serving_stats AS surfaces
+        FROM \`bigquery-public-data.google_ads_transparency_center.creative_stats\`,
+          UNNEST(region_stats) AS region
+        WHERE region.region_code = 'BE'
+          AND advertiser_location = 'BE'
+          ${dateFilter}
+        GROUP BY advertiser_disclosed_name, advertiser_id, creative_id, topic, region.times_shown_upper_bound, region.first_shown, region.last_shown, region.surface_serving_stats.surface_serving_stats
+      )
+      GROUP BY advertiser_disclosed_name, advertiser_id, category
+      HAVING total_spend > 0
       ORDER BY advertiser_name ASC
       LIMIT ${limit}
     `;

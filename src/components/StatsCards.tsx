@@ -7,6 +7,13 @@ interface StatsCardsProps {
   selectedPeriod: string;
 }
 
+const formatK = (value: number, prefix = '') => {
+  if (value < 1000) {
+    return `${prefix}${value.toLocaleString(undefined, { maximumFractionDigits: 1 })}`;
+  }
+  return `${prefix}${(value / 1000).toFixed(1)}K`;
+};
+
 export const StatsCards = ({ selectedPeriod }: StatsCardsProps) => {
   // Map period to days
   const periodToDays = {
@@ -24,9 +31,9 @@ export const StatsCards = ({ selectedPeriod }: StatsCardsProps) => {
   const noBelgiumData = statsData && Array.isArray(statsData) && statsData.length > 0 && statsData[0]?._noBelgiumData;
 
   const stats = statsData && Array.isArray(statsData) && statsData.length > 0 && !statsData[0]?._noBelgiumData ? {
-    spend: `€${Math.round((statsData[0].total_spend || 0) / 1000)}K`,
+    spend: formatK(statsData[0].total_spend || 0, '€'),
     advertisers: statsData[0].total_advertisers,
-    impressions: `${Math.round((statsData[0].total_ads || 0) / 1000)}K`,
+    impressions: formatK(statsData[0].total_ads || 0),
   } : null;
 
   const cards = [
